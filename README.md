@@ -70,7 +70,7 @@ select pg_notify('ch3', '[1,2,3,4,5]');
 ```
 Back in python, the payload is passed to callbacks subscribed to channel `my_app_name`, `ch1`, etc. The payload is cast to it's native python type via `ast.literal_eval`. See https://docs.python.org/3/library/ast.html and https://docs.python.org/3/library/ast.html#ast.literal_eval
 
- [!NOTE]
+> [!NOTE]
 > Postgresql notifications must be text and must be shorter than 8000 bytes. It is recommended to only send the key of a record, or a view or table name, a function reference, etc.
 
 
