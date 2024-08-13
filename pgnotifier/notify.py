@@ -39,14 +39,14 @@ class Notifier():
 
     def add_channels(self, channels, autorun=True):
         """
-        Adds one or more channels to the set of channels to monitor. Is a no-op if channel already exists. Optionally restarts listener.
+        Adds one or more channels to the set of channels to monitor. Is a no-op if channel already exists. Optionally restarts listener thread.
 
         Args:
         * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
-        * `autorun` restart listener with new channels added, as `bool`. Default is `True`.
+        * `autorun` restart listener thread with new channels added, as `bool`. Default is `True`.
 
         > [!NOTE]
-        > Added channels *can only* be monitored by disposing and recreating the database connection and listener loop (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, added channels *will not* be monitored until a call to `stop()` and `run()` or `restart()` is made.
+        > Added channels *can only* be monitored by disposing and recreating the database connection and listener thread (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, added channels *will not* be monitored until a call to `stop()` and `run()` or `restart()` is made.
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
