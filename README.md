@@ -92,17 +92,14 @@ n = Notifier(conf)
 
 
 #### ``add_channels(channels, autorun=True)``
-Adds one or more channels to the set of channels to monitor. Is a no-op
-if channel already exists. Optionally restarts listener.
+Adds one or more channels to the set of channels to monitor. Is a no-op if channel already exists. Optionally restarts listener.
+
 Args:
  * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
  * `autorun` restart listener with new channels added, as `bool`. Default is `True`.
 
-> [!NOTE] Added channels *can only* be monitored by disposing and
-> recreating the database connection and listener loop (as the notifier
-> blocks). This mechanism happens automatically when `autorun=True`.
-> Otherwise, if `autorun=False`, added channels *will not* be monitored
-> until a call to `stop()` and `run()` or `restart()` is made.
+> [!NOTE]
+> Added channels *can only* be monitored by disposing and recreating the database connection and listener loop (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, added channels *will not* be monitored until a call to `stop()` and `run()` or `restart()` is made.
 
 ``` python
 from pgnotifier import Notifier
@@ -194,7 +191,7 @@ When a notification is received on a channel, callbacks subscribed to that chann
 Args:
  * `id` the subscriber `id` as `hashable`.
  * `channel` the notification channel, as `str`.
- * `payload` the notification received, as native python type as cast by `ast.literal_eval`.
+ * `payload` the notification received, as native type as cast by `ast.literal_eval`.
  * `pid` the notifying sessions server process PID, as `int`.
 
 
@@ -288,9 +285,8 @@ n.start()
 
 
 #### ``stop()``
-Stops the listener thread (if running). Is a no-op if thread is not running.
+Stops the listener thread (if running) and closes the database connection. Is a no-op if thread is not running.
 
-Cancels the listen thread and closes the database connection.
 
 ``` python
 from pgnotifier import Notifier
