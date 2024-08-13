@@ -93,15 +93,15 @@ n = Notifier(conf)
 
 #### ``add_channels(channels, autorun=True)``
 Adds one or more channels to the set of channels to monitor. Is a no-op if channel already exists.
-Optionally restarts listener.
+Optionally restarts listener thread.
 
 
 Args:
  * `channels` list of channels to add, as `str` (single channel), `list` or `set`
- * `autorun` restart listener with new channels added, as `bool`. Default is `True`.
+ * `autorun` restart listener thread with new channels added, as `bool`. Default is `True`.
 
 > [!NOTE]
-> Added channels *can only* be listened to by disposing and recreating the database connection and listener loop (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, added channels *will not* be listened to until a call to `stop()` and `run()` or `restart()` is made.
+> Added channels *can only* be monitored by disposing of, and recreating the database connection and listener thread (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, added channels *will not* be monitored until a call to `stop()` and `run()` or `restart()` is made.
 
 
 ``` python
@@ -142,14 +142,14 @@ print("channels: ", s)
 
 
 #### ``remove_channels(channels, autorun=True)``
-Removes one or more channels from the set of channels to monitor. Is a no-op if channel doesn't exist. Optionally restarts listener.
+Removes one or more channels from the set of channels to monitor. Is a no-op if channel doesn't exist. Optionally restarts listener thread.
 
 Args:
  * `channels` list of channels to remove from the channel list, as `str` (single channel), `list` or `set`
- * `autorun` restart listener with channels removed, as `bool`. Defaults to `True`.
+ * `autorun` restart listener thread with channels removed, as `bool`. Defaults to `True`.
 
 > [!NOTE]
-> Removed channels *will only* cease being monitored by disposing and recreating the database connection and listener loop (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, removed channels *will* continue to be listened to until a call to `stop()` and `run()` or `restart()` is made.
+> Removed channels *will only* cease being monitored by disposing of, and recreating the database connection and listener thread (as the notifier blocks). This mechanism happens automatically when `autorun=True`. Otherwise, if `autorun=False`, removed channels *will* continue to be monitored until a call to `stop()` and `run()` or `restart()` is made.
 
 
 ``` python
@@ -181,13 +181,13 @@ print("channels: ", s)
 
 
 #### ``subscribe(id, channel, fn, autorun=True)``
-Adds a callback function with id for notifications on channel. Creates channel if channel does not exist. Optionally restarts listener.
+Adds a callback function with id for notifications on channel. Creates channel if channel does not exist. Optionally restarts listener thread.
 
 Args:
  * `id` subscriber id, as `hashable` (i.e. any immutable type such as strings, numbers, and tuples containing immutable types)
  * `channel` notification channel to subscribe to, as `str`
  * `fn` callback function, as `callable` (i.e. function or method).
- * `autorun` restart listener if new channel added, as `bool`. Defaults to `True`.
+ * `autorun` restart listener thread if new channel added, as `bool`. Defaults to `True`.
 
 When a notification is received on a channel, callbacks subscribed to that channel will be executed.
 
@@ -227,12 +227,12 @@ print("subscriptions: ", d)
 
 
 #### ``unsubscribe(id, channel, autorun=True)``
-Removes a callback function with id from notifications on channel. Also removes channel if that channel no longer contains any subscriptions. Optionally restarts listener.
+Removes a callback function with id from notifications on channel. Also removes channel if that channel no longer contains any subscriptions. Optionally restarts listener thread.
 
 Args:
  * `id`  the subscriber id, as `hashable`
  * `channel` notification channel to unsubscribe from, as `str`
- * `autorun` restart listener if channel removed, as `bool`. Defaults to `True`.
+ * `autorun` restart listener thread if channel removed, as `bool`. Defaults to `True`.
 
 
 ``` python
@@ -246,7 +246,7 @@ n.unsubscribe(42, 'ch1')
 
 
 #### ``restart()``
-(Re)starts notify listener and recreates database connection. *This function is generally not needed in userland.*
+(Re)starts listener thread and recreates database connection. *This function is generally not needed in userland.*
 
 > [!NOTE]
 > Only necessary under the following conditions:
@@ -266,9 +266,9 @@ n.restart()
 
 
 #### ``start()``
-Starts the Notifier (if not already running). Is a no-op if thread already running. *This function is generally not needed in userland.*
+Starts the listener thread (if not already running). Is a no-op if thread already running. *This function is generally not needed in userland.*
 
-Establishes database connection and spins off a thread to listen to notify channels and execute subscribed callbacks.
+Establishes database connection and spins off a thread to monitor notify channels and execute subscribed callbacks.
 
 > [!NOTE]
 > Only necessary under the following conditions:
@@ -288,7 +288,7 @@ n.start()
 
 
 #### ``stop()``
-Stops the Notifier.
+Stops the listener thread (if running). Is a no-op if thread is not running.
 
 Cancels the listen thread and closes the database connection.
 
