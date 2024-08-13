@@ -6,15 +6,24 @@ import ast
 
 from concurrent.futures import ThreadPoolExecutor
 
-
 def as_async(fn, *args):
     loop = asyncio.new_event_loop()
     return loop.run_in_executor(ThreadPoolExecutor(max_workers=1), fn, *args)
 
-
 class Notifier():
     """
-    A simple little utility to capture and process Postgresql NOTIFY streams.
+    # pgnotifier
+    A simple little utility to capture and process Postgresql NOTIFY streams
+
+    #### Features
+    * Monitor multiple channels at once
+    * Register multiple callbacks to any number of channels
+    * Add and remove channels at will
+    * Add and remove callbacks at will
+    * Abstracts away asynchronous context for synchronous use
+    * Automatic type conversion of all valid python types via `ast.literal_eval`
+    * Persistent, immutable internals
+    * Tight footprint
     """
     def __init__(self, db_conf):
         super().__init__()
@@ -33,16 +42,16 @@ class Notifier():
         Adds one or more channels to the set of channels to monitor. Is a no-op
         if channel already exists. Optionally restarts listener.
 
-
         Args:
         * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
         * `autorun` restart listener with new channels added, as `bool`. Default is `True`.
 
-        [!NOTE] Added channels *can only* be monitored by disposing and
-        recreating the database connection and listener loop (as the notifier
-        blocks). This mechanism happens automatically when `autorun=True`.
-        Otherwise, if `autorun=False`, added channels *will not* be monitored
-        until a call to `stop()` and `run()` or `restart()` is made.
+        > [!NOTE]
+        > Added channels *can only* be monitored by disposing and
+        > recreating the database connection and listener loop (as the notifier
+        > blocks). This mechanism happens automatically when `autorun=True`.
+        > Otherwise, if `autorun=False`, added channels *will not* be monitored
+        > until a call to `stop()` and `run()` or `restart()` is made.
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
