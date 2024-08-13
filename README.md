@@ -62,7 +62,7 @@ n.subscribe((2, 'another_id'), 'ch2', do_complex_thing)
 ## Test
 From the Postrgesql end, send TEXT or JSON string notifications like so:
 
-``` plsql
+``` sql
 select pg_notify('my_app_name', '"WARNING: Something really bad happened"');
 select pg_notify('ch1', '{"topic": "abc", "data": "some data", "something": "else"}');
 select pg_notify('ch2', '{"topic": "xyz", "notice": "update", "data": [2, "stuff"]}');
