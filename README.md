@@ -6,7 +6,7 @@ A simple little utility to capture and process Postgresql NOTIFY streams
 * Register multiple callbacks to any number of channels
 * Add and remove channels at will
 * Add and remove callbacks at will
-* Abstracts away all asynchronous context to allow for easy synchronous use
+* Abstracts away asynchronous context for synchronous use
 * Automatic type conversion of all valid python types via `ast.literal_eval`
 * Persistent, immutable internals
 * Tight footprint
@@ -80,7 +80,7 @@ Back in python, the payload is passed to callbacks subscribed to channel `my_app
 Constructor.
 
 Args:
- * `db_conf` database configuration, as `dict`
+ * `db_conf` database configuration, as `dict`.
 
 
 ``` python
@@ -97,7 +97,7 @@ Optionally restarts listener thread.
 
 
 Args:
- * `channels` list of channels to add, as `str` (single channel), `list` or `set`
+ * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
  * `autorun` restart listener thread with new channels added, as `bool`. Default is `True`.
 
 > [!NOTE]
@@ -127,7 +127,7 @@ n.add_channel('ch4')
 
 
 #### ``get_channels()``
-Returns the set of registered channels, as `set`
+Returns the set of registered channels, as `set`.
 
 
 ``` python
@@ -145,7 +145,7 @@ print("channels: ", s)
 Removes one or more channels from the set of channels to monitor. Is a no-op if channel doesn't exist. Optionally restarts listener thread.
 
 Args:
- * `channels` list of channels to remove from the channel list, as `str` (single channel), `list` or `set`
+ * `channels` list of channels to remove, as `str` (single channel), `list` or `set`.
  * `autorun` restart listener thread with channels removed, as `bool`. Defaults to `True`.
 
 > [!NOTE]
@@ -184,18 +184,18 @@ print("channels: ", s)
 Adds a callback function with id for notifications on channel. Creates channel if channel does not exist. Optionally restarts listener thread.
 
 Args:
- * `id` subscriber id, as `hashable` (i.e. any immutable type such as strings, numbers, and tuples containing immutable types)
- * `channel` notification channel to subscribe to, as `str`
+ * `id` subscriber id, as `hashable` (i.e. any immutable type such as strings, numbers, and tuples containing immutable types).
+ * `channel` notification channel to subscribe to, as `str`.
  * `fn` callback function, as `callable` (i.e. function or method).
  * `autorun` restart listener thread if new channel added, as `bool`. Defaults to `True`.
 
 When a notification is received on a channel, callbacks subscribed to that channel will be executed.
 
 Args:
- * `id` the subscriber `id` as `hashable`
- * `channel` the notification channel, as `str`
- * `payload` the notification received, as native python type as cast by `ast.literal_eval`
- * `pid` the notifying sessions server process PID, as `int`
+ * `id` the subscriber `id` as `hashable`.
+ * `channel` the notification channel, as `str`.
+ * `payload` the notification received, as native python type as cast by `ast.literal_eval`.
+ * `pid` the notifying sessions server process PID, as `int`.
 
 
 ``` python
@@ -230,8 +230,8 @@ print("subscriptions: ", d)
 Removes a callback function with id from notifications on channel. Also removes channel if that channel no longer contains any subscriptions. Optionally restarts listener thread.
 
 Args:
- * `id`  the subscriber id, as `hashable`
- * `channel` notification channel to unsubscribe from, as `str`
+ * `id`  the subscriber id, as `hashable`.
+ * `channel` notification channel to unsubscribe from, as `str`.
  * `autorun` restart listener thread if channel removed, as `bool`. Defaults to `True`.
 
 
@@ -250,9 +250,9 @@ n.unsubscribe(42, 'ch1')
 
 > [!NOTE]
 > Only necessary under the following conditions:
-> * Channels have been added or removed with arg `autorun=False`
+> * Channels have been added or removed with arg `autorun=False`.
 > * Subscribers have been added or removed with arg `autorun=False`, and in the process, have themselves created or removed channels.
-> * Notifier was previously stopped by a call to `stop()`
+> * Notifier was previously stopped by a call to `stop()`.
 > * No channels and no subscribers have been added to Notifier and no call to `run()` or `restart()` has been made.
 
 ``` python
@@ -272,9 +272,9 @@ Establishes database connection and spins off a thread to monitor notify channel
 
 > [!NOTE]
 > Only necessary under the following conditions:
-> * Channels have been added or removed with arg `autorun=False`
+> * Channels have been added or removed with arg `autorun=False`.
 > * Subscribers have been added or removed with arg `autorun=False`, and in the process, have themselves created or removed channels.
-> * Notifier was previously stopped by a call to `stop()`
+> * Notifier was previously stopped by a call to `stop()`.
 > * No channels and no subscribers have been added to Notifier and no call to `run()` or `restart()` has been made.
 
 ``` python

@@ -23,7 +23,9 @@ class Notifier():
         self.loop = None        # listener loop
 
     def get_channels(self):
-        """Returns a set of all channels."""
+        """
+        Returns the set of registered channels, as `set`.
+        """
         return pyr.thaw(self.subs.keys())
 
     def add_channels(self, channels, autorun=True):
@@ -33,7 +35,7 @@ class Notifier():
 
 
         Args:
-        * `channels` list of channels to add, as `str` (single channel), `list` or `set`
+        * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
         * `autorun` restart listener with new channels added, as `bool`. Default is `True`.
 
         [!NOTE] Added channels *can only* be monitored by disposing and
@@ -41,13 +43,6 @@ class Notifier():
         blocks). This mechanism happens automatically when `autorun=True`.
         Otherwise, if `autorun=False`, added channels *will not* be monitored
         until a call to `stop()` and `run()` or `restart()` is made.
-
-
-
-
-        Adds one or more channels to monitor.
-        If a channel already exists, this addition of that channel is ignored.
-        Optionally restarts listener. If not given, defaults to True.
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
@@ -58,14 +53,36 @@ class Notifier():
                 self.restart()
 
     def add_channel(self, channel, autorun=True):
-        """Alias for add_channels, as a non-pluralised naming convenience."""
+        """
+        Alias for `add_channels(...)`, as a non-pluralised naming convenience.
+        """
         self.add_channels(channel, autorun)
 
     def remove_channels(self, channels, autorun=True):
         """
-        Removes one or more channels from being monitored.
-        If a channel doesn't exist, the removal of that channel is ignored.
-        Optionally restarts listener. If not given, defaults to True.
+        Removes one or more channels from the set of channels to monitor.
+        Is a no-op if channel doesn't exist. Optionally restarts listener thread.
+
+        Args:
+        * `channels` list of channels to remove, as `str` (single channel), `list` or `set`.
+        * `autorun` restart listener thread with channels removed, as `bool`. Defaults to `True`.
+
+        > [!NOTE]
+        > Removed channels *will only* cease being monitored by disposing of,
+        and recreating the database connection and listener thread (as the
+        notifier blocks). This mechanism happens automatically when `autorun=True`.
+        Otherwise, if `autorun=False`, removed channels *will* continue to be
+        monitored until a call to `stop()` and `run()` or `restart()` is made.
+
+        ``` python
+        from pgnotifier import Notifier
+
+        n = Notifier(conf)
+        # channels and/or subscribers, have been added, removed, etc. ...
+        n.remove_channels(['my_app_name', 'ch2'])
+        s = n.get_channels()
+        print("channels: ", s)
+        ```
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
@@ -108,7 +125,7 @@ class Notifier():
 
     def restart(self):
         """(Re)starts notify listener and recreates database connection."""
-        if self.loop and not self.loop.cancelled():
+        if self.loop and not self.loop.done():
             self.stop()
         self.start()
 
@@ -123,11 +140,13 @@ class Notifier():
 
         NOTE: notifies() blocks so connection never becomes available again once sent to thread executor. Whenever we need to spin a new thread (e.g. when adding or removing a channel), we must also supply a new connection.
         """
-        if not self.loop.running():
-            self.cn = pg.connect(**self.conf, autocommit=True)
-            for c in self.subs.keys():
-                self.cn.cursor().execute(str("listen " + c))
-            self.loop = as_async(self._notify, self.cn.notifies())
+
+        if self.loop and not self.loop.done():
+            return
+        self.cn = pg.connect(**self.conf, autocommit=True)
+        for c in self.subs.keys():
+            self.cn.cursor().execute(str("listen " + c))
+        self.loop = as_async(self._notify, self.cn.notifies())
 
     def _notify(self, generator):
         """
