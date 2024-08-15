@@ -1,4 +1,4 @@
-# pgnotifier
+# pgnotifier (WIP, broken, etc.)
 A simple little utility to capture and process Postgresql NOTIFY streams
 
 #### Features
