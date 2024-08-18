@@ -1,4 +1,3 @@
-import operator
 import threading
 import asyncio
 import psycopg as pg
@@ -7,7 +6,7 @@ import ast
 
 from concurrent.futures import ThreadPoolExecutor
 
-# helpers
+# little fn helpers
 def as_async(fn, *args):
     loop = asyncio.new_event_loop()
     return loop.run_in_executor(ThreadPoolExecutor(max_workers=1), fn, *args)
@@ -21,9 +20,8 @@ def dissoc_in(m,pv):
 def filterkv(m,f,*a):
     return {k:v for (k,v) in m.items() if f(k,v,*a)}
 
-def bool_op(b):
-    return operator.and_ if b else operator.or_
-
+def filterv(v,f,*a):
+    return [v for v in v if f(v,*a)]
 
 class Notifier():
     """
@@ -36,20 +34,19 @@ class Notifier():
     * Add and remove channels at will
     * Add and remove callbacks at will
     * Abstracts away asynchronous context for synchronous use
-    * Automatic type conversion of all valid python types via `ast.literal_eval`
+    * Automatic str->type conversion of all valid python types via `ast.literal_eval`
     * Persistent, immutable internals
     * Tight footprint
     """
 
     def __init__(self, db_conf):
         super().__init__()
-        self.conf = db_conf     # database credentials
-        self.channels = pyr.m() # channels
-        self.subs = pyr.m()     # subscribers
-        self.c2s = pyr.m()      # ch->sub index + chan specific sub meta data
-        self.s2c = pyr.m()      # sub->ch index
-        self.loop = None        # listener loop
-
+        self.conf = db_conf         # database credentials
+        self.channels = pyr.m()     # channels
+        self.subs = pyr.m()         # subscribers
+        self.c2s = pyr.m()          # ch->sub index & channel specific sub meta data
+        self.loop = None            # listener thread
+        self.active_channels = None # channels in listener thread
 
     def get_channels(self):
         """
@@ -57,11 +54,16 @@ class Notifier():
         """
         return pyr.thaw(self.channels)
 
+    def get_active_channels(self):
+        """
+        Returns the vector of channels active in listener thread, as `list`.
+        """
+        return self.active_channels
 
     def add_channels(self, channels):
         """
         Adds one or more channels to the set of channels to monitor.
-        Is a no-op if channel already exists. Optionally restarts listener thread.
+        Is a no-op if channel already exists.
 
         Args:
         * `channels` list of channels to add, as `str` (single channel), `list` or `set`.
@@ -76,13 +78,11 @@ class Notifier():
                 if not self.c2s.get(c, None):
                     self.c2s = self.c2s.set(c, pyr.m())
 
-
     def add_channel(self, channel):
         """
         Alias for `add_channels(...)`, as a non-pluralised naming convenience.
         """
         self.add_channels(channel)
-
 
     def remove_channels(self, channels, autorun=True):
         """
@@ -111,23 +111,10 @@ class Notifier():
         with threading.Lock():
             for c in channels:
                 if c in self.channels.keys():
-
-                    # remove chan
                     self.channels = self.channels.discard(c)
-
-                    # remove chan from sub->chan idx
-                    if _subs := self.c2s.get(c, None):
-                        for k,v in _subs.items():
-                            self.s2c = self.s2c.transform(
-                                [k], lambda x: x.remove(c))
-
-                    # remove chan from chan->sub idx
                     self.c2s = self.c2s.discard(c)
-
-        #FIXME: if channel muted or has no subs then no need to restart
         if autorun:
-            self.restart()
-
+            self._maybe_restart()
 
     def remove_channel(self, channel, autorun=True):
         """
@@ -135,13 +122,11 @@ class Notifier():
         """
         self.remove_channels(channel, autorun)
 
-
     def get_subscribers(self):
         """
         Returns channel -> subscriber mappings, as `dict`.
         """
         return pyr.thaw(self.subs)
-
 
     def subscribe(self, id, channel, fn, autorun=True):
         """
@@ -167,7 +152,6 @@ class Notifier():
         * `payload` the notification received, as native type as cast by `ast.literal_eval`.
         * `pid` the notifying sessions server process PID, as `int`.
 
-
         > [!NOTE]
         > Added channels *can only* be monitored by disposing and recreating the
         database connection and listener thread (as the notifier blocks).
@@ -182,37 +166,15 @@ class Notifier():
         > * A channel can have multiple subscribers registered.
         """
         with threading.Lock():
-
-            # add channel if doesn't existent
-            restart = False
             if not channel in self.channels:
-                restart = True
                 self.add_channel(channel)
-
-        # add sub
         self.subs = self.subs.set(id, fn)
-
-        # create sub->chan idx if doesn't exist
-        if not self.s2c.get(id, None):
-            self.s2c = self.s2c.set(id, pyr.v())
-
-        # create chan->sub idx if doesn't exist
         if not self.c2s.get(channel, None):
             self.c2s = self.c2s.set(channel, pyr.m())
-
-        # reg sub with chan->sub idx
         if not self.c2s.get(channel, None).get(id, None):
             self.c2s = assoc_in(self.c2s, [channel,id], pyr.pmap({'mute': False}))
-
-        # reg chan with sub->chan idx
-        _x = self.s2c.get(id, None)
-        if not channel in _x:
-            self.s2c = self.s2c.set(id, _x.append(channel))
-
-        #FIXME: if channel muted then no need to restart
-        if autorun and restart:
-            self.restart()
-
+        if autorun:
+            self._maybe_restart()
 
     def unsubscribe(self, id, channel, autorun=True):
         """
@@ -227,22 +189,11 @@ class Notifier():
         * `autorun` restart listener thread if channel removed from listener
         thread, as `bool`. Defaults to `True`.
         """
-
-        # remove sub
         self.subs = self.subs.discard(id)
-
-        # remove sub from sub->chan idx
-        self.s2c = self.s2c.discard(id)
-
-        # remove sub from chan->sub idx
         if id in self.c2s.get(channel, None):
             self.c2s = dissoc_in(self.c2s, [channel,id])
-
         if autorun:
-            self._maybe_restart(channel)
-
-
-
+            self._maybe_restart()
 
     def mute_channels(self, channels=pyr.v()):
         """
@@ -257,13 +208,11 @@ class Notifier():
         """
         self._mute_chans(channels, True)
 
-
     def mute_channel(self, channel):
         """
         Alias for `mute_channels(...)`, as a non-pluralised naming convenience.
         """
         self._mute_chans(channel, True)
-
 
     def unmute_channels(self, channels=pyr.v()):
         """
@@ -276,26 +225,23 @@ class Notifier():
         """
         self._mute_chans(channels, False)
 
-
     def unmute_channel(self, channel):
         """
         Alias for `unmute_channels(...)`, as a non-pluralised naming convenience.
         """
         self._mute_chans(channel, False)
 
-
     def get_muted_channels(self):
         """
         Returns map of all muted channels, as `dict`.
         """
-        return pyr.thaw(filterkv(self.channels, lambda _,v: v['mute']))
+        return pyr.thaw(self._chans_by_mute_state(True))
 
-    def get_not_muted_channels(self):
+    def get_non_muted_channels(self):
         """
         Returns map of all non-muted channels, as `dict`.
         """
-        return pyr.thaw(filterkv(self.channels, lambda _,v: not v['mute']))
-
+        return pyr.thaw(self._chans_by_mute_state(False))
 
     def mute_subscriber(self, id, channels=pyr.v()):
         """
@@ -310,18 +256,14 @@ class Notifier():
         """
         self._mute_sub(id, channels, True)
 
-
     def unmute_subscriber(self, id, channels=pyr.v()):
         self._mute_sub(id, channels, False)
 
+    def get_muted_subscribers(self, channels=None):
+        return pyr.thaw(self._subs_by_mute_state(True, channels))
 
-    def get_muted_subscribers(self, ch=None):
-        return pyr.thaw(self._subs_by_mute_state(True, ch))
-
-
-    def get_not_muted_subscribers(self, ch=None):
+    def get_non_muted_subscribers(self, ch=None):
         return self._subs_by_mute_state(False, ch)
-
 
     def restart(self):
         """
@@ -341,7 +283,6 @@ class Notifier():
             self.stop()
         self.start()
 
-
     def stop(self):
         """
         Stops the listener thread (if running) and closes the database connection.
@@ -350,34 +291,6 @@ class Notifier():
         self.loop.cancel()
         self.cn.cursor().close()
         self.cn.close()
-
-
-    thread restart conditions:
-    - channel on thread muted
-
-    - channel not on thread unmuted and contains a non muted sub
-    - channel on thread has non-muted sub added
-    - channel on thread has non-muted sub removed
-    - channel not on thread is not muted and has sub added
-    - channel on thread has all subs muted
-    - channel not on thread is not muted and has sub unmuted
-
-
-    on thread conditions:
-    - channel is not muted
-    - channel contains at least one non-muted sub
-
-
-    off to on:
-    - channel unmuted and contains at least one unmuted sub
-    - channel not muted and has a sub added
-    - channel not muted and has a sub unmuted
-
-    on to off:
-    - channel muted
-    - channel removed
-    - channel has sub muted
-
 
     def start(self):
         """
@@ -405,10 +318,12 @@ class Notifier():
         if self.loop and not self.loop.done():
             return
         self.cn = pg.connect(**self.conf, autocommit=True)
-        for k in self._chans_by_active_state(True).keys():
-            self.cn.cursor().execute(str("listen " + k))
+        if cs := self.active_channels:
+            for c in cs:
+                self.cn.cursor().execute(str("listen " + c))
+        else:
+            self.cn.cursor().execute(str("listen SPIN_WAIT"))
         self.loop = as_async(self._notify, self.cn.notifies())
-
 
     def _notify(self, generator):
         """
@@ -436,10 +351,17 @@ class Notifier():
             for k,v in self._subs_by_mute_state(False, n.channel).items():
                 self.subs[k](k, n.channel, ast_payload, n.pid)
 
+    def _valid_chans(self):
+        if nms := self._subs_by_mute_state(False):
+            return filterv(nms.keys(), lambda v: not self.channels[v]['mute'])
+        return None
 
-    def _maybe_restart(self, ch):
-        if len(self.c2s.get(ch, None)) == 0:
+    def _maybe_restart(self):
+        cs = self._valid_chans()
+        if cs != self.active_channels:
+            self.active_channels = cs
             self.restart()
+        # else: nothing has changed, as you were
 
     def _mute_chans(self, channels, val):
         if isinstance(channels, str):
@@ -447,13 +369,12 @@ class Notifier():
         if len(channels) == 0: # default: all channels
             channels = self.channels
         with threading.Lock():
-            #FIXME:
-            # on mute: if all channels given already muted then no need to restart
-            # on unmute: if all channels given already un-muted then no need to restart
             for c in channels:
                 self.channels = assoc_in(self.channels, [c,'mute'], val)
-            self.restart()
+        self._maybe_restart()
 
+    def _chans_by_mute_state(self, b):
+        return filterkv(self.channels, lambda _,v: v['mute']!=b)
 
     def _mute_sub(self, id, channels, val):
         if isinstance(channels, str):
@@ -463,17 +384,7 @@ class Notifier():
         with threading.Lock():
             for c in channels:
                 self.c2s = assoc_in(self.c2s, [c, id, 'mute'], val)
-            self.restart()
-
-
-    FIXME: also test subs == 0 and all_subs_mute?
-    def _chans_by_active_state(self, b):
-        return filterkv(self.channels, lambda _,v: v['mute']!=b)
-
-
-    def _chans_by_mute_state(self, b):
-        return filterkv(self.channels, lambda _,v: v['mute']!=b)
-
+        self._maybe_restart()
 
     def _subs_by_mute_state(self, b, ch=None):
         _flt = lambda k,v: v['mute']==b

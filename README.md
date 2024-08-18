@@ -1,5 +1,5 @@
 # pgnotifier (WIP, broken, etc.)
-A simple little utility to capture and process Postgresql NOTIFY streams
+A simple little utility to capture and process, and dispatch Postgresql NOTIFY streams
 
 #### Features
 * Monitor multiple channels at once
