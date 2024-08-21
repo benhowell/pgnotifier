@@ -19,8 +19,6 @@ A simple little utility to capture, process, and dispatch Postgresql NOTIFY stre
 pip install pgnotifier
 ```
 
-
-
 ## Usage
 
 ``` python
@@ -77,6 +75,8 @@ select pg_notify('ch2', '[1,2,3,4,5]');
 select pg_notify('ch3', '[1,2,3,4,5]');
 ```
 Back in python, the payload is passed to callbacks subscribed to channels `ch1`, `ch2`, etc. The payload is cast to it's native python type via `ast.literal_eval`. See https://docs.python.org/3/library/ast.html and https://docs.python.org/3/library/ast.html#ast.literal_eval
+
+<br>
 
 > [!IMPORTANT]
 > Postgresql notifications must be text and must be shorter than 8000 bytes. It is recommended to only send the key of a record, or a view or table name, a function reference, etc.
@@ -279,7 +279,7 @@ Args:
 * `payload` the notification received, as native type as cast by `ast.literal_eval`.
 * `pid` the notifying sessions server process PID, as `int`.
 
-> [!NOTE]
+> [!TIP]
 > Channels and subscribers (i.e. callbacks) can have a many-to-many
 relationship.
 > * A subscriber can be registered with multiple channels.

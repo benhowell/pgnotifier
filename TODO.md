@@ -4,6 +4,7 @@ A simple little utility to capture, process, and dispatch Postgresql NOTIFY stre
 ## TODO
 A list of stuff to look into at a later date.
 
+* Type annotations for function sigs
 * Better exception handling
   * There is very little in the way of catching possible exceptions.
   * Custom exceptions to give salient information.
