@@ -192,7 +192,9 @@ Args:
 
 > [!WARNING]
 > All channel subscribers will also be removed.
+
 <br>
+
 > [!NOTE]
 > Active channels, when removed, *will only* cease being monitored by disposing of,
 and recreating the database connection and listener thread (as the
