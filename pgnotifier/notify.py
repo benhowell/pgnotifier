@@ -94,11 +94,12 @@ class Notifier:
         and recreating the database connection and listener thread (as the
         notifier blocks). This mechanism happens automatically when `autorun=True`.
         Otherwise, if `autorun=False`, removed channels *will* continue to be
-        monitored until a call to `stop()` and `start()` or `restart()` is made.
-
+        monitored until a call to `stop()` and `start()` or  `restart()`, is made.
         Inactive channels (e.g. channel is muted and/or has no subscribers and/or
-        has all muted subscribers), when removed, *does not* require a restart as
-        it will have already been removed from the listener thread.
+        has all muted subscribers), when removed, *do not* require a restart as
+        they will have already been removed from the listener thread. It's advisable
+        to allow pgnotifier take care of listener thread management *unless there is a
+        very good reason* to manage it manually.
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
@@ -129,8 +130,17 @@ class Notifier:
         * `fn` callback function, as `callable` (i.e. function or method).
         * `autorun` restart listener thread (if needed), as `bool`. Defaults to `True`.
 
-        When a notification is received on a channel, callbacks subscribed to
-        that channel will be executed.
+        > [!NOTE]
+        > A new channel, if added with this subscriber, *can only* be monitored
+        by disposing and recreating the database connection and listener thread
+        (as the notifier blocks). This mechanism happens automatically when
+        `autorun=True`. Otherwise, if `autorun=False`, the new channel and
+        subscriber *will not* be monitored until a call to `stop()` and `run()`, or
+        `restart()` is made. It's advisable to allow pgnotifier take care of listener
+        thread management *unless there is a very good reason* to manage it manually.
+
+        When a notification is received on a channel, callbacks subscribed to that channel
+        will be executed.
 
         Args:
         * `id` the subscriber `id` as `hashable`.
@@ -139,16 +149,7 @@ class Notifier:
         * `pid` the notifying sessions server process PID, as `int`.
 
         > [!NOTE]
-        > A new channel, if added with this subscriber, *can only* be monitored
-        by disposing and recreating the database connection and listener thread
-        (as the notifier blocks). This mechanism happens automatically when
-        `autorun=True`. Otherwise, if `autorun=False`, the new channel and
-        subscriber *will not* be monitored until a call to `stop()` and `start()`,
-        or `restart()` is made.
-
-        > [!NOTE]
-        > Channels and subscribers (i.e. callbacks) can have a many-to-many
-        relationship.
+        > Channels and subscribers (i.e. callbacks) can have a many-to-many relationship.
         > * A subscriber can be registered with multiple channels.
         > * A channel can have multiple subscribers registered.
         """
@@ -247,7 +248,8 @@ class Notifier:
 
     def unmute_subscriber(self, id, channels=pyr.v()):
         """
-        Un-mutes subscriber.
+        Un-mutes subscriber on channels. If subscriber is on a non-muted, inactive
+        channel, the channel becomes active and is added to the listener thread.
 
         Args:
         * `id` subscriber id, as `hashable` (i.e. any immutable type such as
@@ -294,9 +296,8 @@ class Notifier:
         *This function is generally not needed in userland.*
 
         > [!NOTE]
-        > Listener thread (re)starts are automatic by default and are only
-        required under certain specific circumstances.
-        See [__maybe_restart](#__maybe_restart) for more detail.
+        > Listener thread (re)starts are only required under certain specific circumstances.
+        See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
         """
         self.__maybe_restart()
 
@@ -306,9 +307,8 @@ class Notifier:
         *This function is generally not needed in userland.*
 
         > [!NOTE]
-        > Listener thread (re)starts are automatic by default and are only
-        required under certain specific circumstances.
-        See [__maybe_restart](#__maybe_restart) for more detail.
+        > Listener thread (re)starts are only required under certain specific circumstances.
+        See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
         """
         self.__maybe_restart()
 

@@ -177,7 +177,7 @@ Args:
 from pgnotifier import Notifier
 
 n = Notifier(conf)
-n.add_channels(['my_app_name', 'ch1', 'ch2', 'ch3'])
+n.add_channels(['ch1', 'ch2', 'ch3'])
 ```
 <hr style="height:1px">
 
@@ -188,30 +188,31 @@ Is a no-op if channel doesn't exist. Optionally restarts listener thread (if nee
 
 Args:
 * `channels` list of channels to remove, as `str` (single channel), `list` or `set`.
-* `autorun` restart listener thread with channels removed, as `bool`. Defaults to `True`.
+* `autorun` maybe_restart listener thread with channels removed, as `bool`. Defaults to `True`.
 
 > [!WARNING]
 > All channel subscribers will also be removed.
-
+<br>
 > [!NOTE]
 > Active channels, when removed, *will only* cease being monitored by disposing of,
 and recreating the database connection and listener thread (as the
 notifier blocks). This mechanism happens automatically when `autorun=True`.
 Otherwise, if `autorun=False`, removed channels *will* continue to be
 monitored until a call to `stop()` and `start()` or  `restart()`, is made.
-
 Inactive channels (e.g. channel is muted and/or has no subscribers and/or
-has all muted subscribers), when removed, *does not* require a restart as
-it will have already been removed from the listener thread.
+has all muted subscribers), when removed, *do not* require a restart as
+they will have already been removed from the listener thread. It's advisable
+to allow pgnotifier take care of listener thread management *unless* there is a
+very good reason to manage it manually.
 
 ``` python
 from pgnotifier import Notifier
 
 n = Notifier(conf)
 # channels and/or subscribers, have been added, removed, etc. ...
-n.remove_channels(['my_app_name', 'ch2'])
-s = n.get_channels()
-print("channels: ", s)
+n.remove_channels('ch2')
+c = n.channels()
+print("channels:", c)
 ```
 <hr style="height:1px">
 
@@ -258,6 +259,15 @@ strings, numbers, and tuples containing immutable types).
 * `fn` callback function, as `callable` (i.e. function or method).
 * `autorun` restart listener thread (if needed), as `bool`. Defaults to `True`.
 
+> [!NOTE]
+> A new channel, if added with this subscriber, *can only* be monitored
+by disposing and recreating the database connection and listener thread
+(as the notifier blocks). This mechanism happens automatically when
+`autorun=True`. Otherwise, if `autorun=False`, the new channel and
+subscriber *will not* be monitored until a call to `stop()` and `run()`, or
+`restart()` is made. It's advisable to allow pgnotifier take care of listener
+thread management *unless there is a very good reason* to manage it manually.
+
 When a notification is received on a channel, callbacks subscribed to that channel
 will be executed.
 
@@ -266,14 +276,6 @@ Args:
 * `channel` the notification channel, as `str`.
 * `payload` the notification received, as native type as cast by `ast.literal_eval`.
 * `pid` the notifying sessions server process PID, as `int`.
-
-> [!NOTE]
-> A new channel, if added with this subscriber, *can only* be monitored
-by disposing and recreating the database connection and listener thread
-(as the notifier blocks). This mechanism happens automatically when
-`autorun=True`. Otherwise, if `autorun=False`, the new channel and
-subscriber *will not* be monitored until a call to `stop()` and `run()`,
-`restart()`, or maybe_restart() is made.
 
 > [!NOTE]
 > Channels and subscribers (i.e. callbacks) can have a many-to-many
@@ -285,7 +287,7 @@ relationship.
 from pgnotifier import Notifier
 
 n = Notifier(conf)
-n.subscribe(42, 'ch1',
+n.subscribe(42, 'ch4',
     lambda id, channel, payload, pid: print("id: ", id, ", channel: ", channel,
         ", payload: ", payload, ", pid: ", pid))
 ```
@@ -320,8 +322,8 @@ from pgnotifier import Notifier
 
 n = Notifier(conf)
 # channels and/or subscribers, have been added, removed, etc. ...
-d = n.get_subscriptions()
-print("subscriptions: ", d)
+s = n.subscribers()
+print("subscribers:", s)
 
 ```
 <hr style="height:1px">
@@ -336,6 +338,16 @@ Subscribers will retain their mute status associated with those channels.
 Args:
 * `channels` list of channels to mute, as `str` (single channel), `list` or `set`.
 If no channels given, *ALL* channels will be muted.
+
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+n.mute_channels('ch1')
+m = n.muted_channels()
+print("muted channels:", m)
+```
 
 <hr style="height:1px">
 
@@ -352,6 +364,15 @@ If no channels given, *ALL* channels will be un-muted.
 > Channel will remain inactive (i.e. excluded from the listener thread)
 if it contains no non-muted subscribers.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+n.unmute_channels()
+m = n.non_muted_channels()
+print("non muted channels:", m)
+```
 <hr style="height:1px">
 
 
@@ -363,6 +384,14 @@ Args:
 (single channel), `list` or `set`.
 If no channels given, *ALL* muted channels will be reported.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+m = n.muted_channels()
+print("muted channels:", m)
+```
 <hr style="height:1px">
 
 
@@ -374,6 +403,14 @@ Args:
 (single channel), `list` or `set`.
 If no channels given, *ALL* non-muted channels will be reported.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+m = n.non_muted_channels(['ch3', 'ch4'])
+print("non muted channels:", m)
+```
 <hr style="height:1px">
 
 
@@ -389,6 +426,15 @@ strings, numbers, and tuples containing immutable types).
 If no channels given, the subscriber will be muted on *ALL* channels it is
 subscribed to.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+n.mute_subscriber('an_id', 'ch2')
+m = n.muted_subscribers()
+print("muted subscribers:", m)
+```
 <hr style="height:1px">
 
 
@@ -404,6 +450,15 @@ strings, numbers, and tuples containing immutable types).
 If no channels given, the subscriber will be unmuted on *ALL* channels it is
 subscribed to.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+n.unmute_subscriber('an_id')
+m = n.muted_subscribers()
+print("muted subscribers:", m)
+```
 <hr style="height:1px">
 
 
@@ -415,6 +470,14 @@ Args:
 (single channel), `list` or `set`.
 If no channels given, muted subscribers on *ALL* channels will be reported.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+m = n.muted_subscribers('ch3')
+print("muted subscribers:", m)
+```
 <hr style="height:1px">
 
 
@@ -426,6 +489,14 @@ Args:
 (single channel), `list` or `set`.
 If no channels given, non-muted subscribers on *ALL* channels will be reported.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been added, removed, etc. ...
+m = n.non_muted_subscribers()
+print("non muted subscribers:", m)
+```
 <hr style="height:1px">
 
 
@@ -449,7 +520,7 @@ Is a no-op if thread already running.
 
 > [!NOTE]
 > Listener thread (re)starts are only required under certain specific circumstances.
-See [__maybe_restart](#__maybe_restart) for more detail.
+See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
 
 
 ``` python
@@ -469,8 +540,7 @@ n.start()
 
 > [!NOTE]
 > Listener thread (re)starts are only required under certain specific circumstances.
-See [__maybe_restart](#__maybe_restart) for more detail.
-
+See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
 
 ``` python
 from pgnotifier import Notifier
@@ -485,11 +555,27 @@ n.restart()
 #### <mark><strong><a style="font-weight:400">Notifier</a>.is_running( )</strong></mark>
 Returns True if listener thread currently running, else False, as `bool`
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been changed with arg autorun=False ...
+b = n.is_running()
+print("listener running?",b)
+```
 <hr style="height:1px">
 
 #### <mark><strong><a style="font-weight:400">Notifier</a>.status( )</strong></mark>
 Returns a map containing the current system status, as `dict`.
 
+``` python
+from pgnotifier import Notifier
+
+n = Notifier(conf)
+# channels and/or subscribers, have been changed with arg autorun=False ...
+s = n.status()
+print("Notifier status:",s)
+```
 <br>
 
 ## Internal helper functions
