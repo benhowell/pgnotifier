@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pgnotifier"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
   { name="Ben Howell", email="ben@psychstudio.com" },
 ]
-description = "A simple little utility to capture and process Postgresql NOTIFY streams"
+description = "A simple little utility to capture, process, and dispatch Postgresql NOTIFY streams"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -24,3 +24,4 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/benhowell/pgnotifier"
 Issues = "https://github.com/benhowell/pgnotifier/issues"
+
