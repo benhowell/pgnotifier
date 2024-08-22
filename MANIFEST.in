@@ -1,0 +1,4 @@
+# MANIFEST.in -- pgnotifier
+
+include TODO.md
+include private_methods.md

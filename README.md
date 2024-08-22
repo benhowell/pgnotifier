@@ -1,5 +1,5 @@
 # pgnotifier
-A simple little utility to capture, process, and dispatch Postgresql NOTIFY streams
+A simple little library to capture, process, and dispatch Postgresql NOTIFY streams
 <br>
 ### Features
 * Monitor multiple channels at once
@@ -604,7 +604,7 @@ Args:
 
 <hr style="height:1px">
 
-#### <mark><strong>filterkv( <em style="font-weight:400">m, f, *a</em> )</strong></mark>
+#### <mark><strong><a style="font-weight:400">notify</a>.filterkv( <em style="font-weight:400">m, f, *a</em> )</strong></mark>
 Trivial associative map filter. Returns a new map with filtered changes, as `pyrsistent.PMap`.
 
 Args:
@@ -614,7 +614,7 @@ Args:
 
 <hr style="height:1px">
 
-#### <mark><strong>as_async( <em style="font-weight:400">f, *a</em> )</strong></mark>
+#### <mark><strong><a style="font-weight:400">notify</a>.as_async( <em style="font-weight:400">f, *a</em> )</strong></mark>
 Runs asynchronous and/or blocking functions in a new asyncio loop, as a task, in a thread. Designed to be called from a synchronous context. Returns `concurrent.futures.Future`.
 
 Args:

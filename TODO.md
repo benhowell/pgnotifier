@@ -1,5 +1,5 @@
 # pgnotifier
-A simple little utility to capture, process, and dispatch Postgresql NOTIFY streams
+A simple little library to capture, process, and dispatch Postgresql NOTIFY streams
 <br>
 ## TODO
 A list of stuff to look into at a later date.

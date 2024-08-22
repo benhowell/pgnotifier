@@ -1,5 +1,5 @@
 # pgnotifier
-A simple little utility to capture, process, and dispatch Postgresql NOTIFY streams
+A simple little library to capture, process, and dispatch Postgresql NOTIFY streams
 <br>
 ## Private methods
 The methods below are private and not intended for use. Documentation
