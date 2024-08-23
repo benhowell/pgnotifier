@@ -127,8 +127,8 @@ via the method links below.
 - [__maybe_restart](./private_methods.md#notifier__maybe_restart-)
 - [__notify](./private_methods.md#notifier__notify)
 - [__valid_chans](./private_methods.md#notifier__valid_chans)
-- [__mute_chans](./private_methods.md#notifier__mute_chans)
-- [__mute_sub](./private_methods.md#notifier__mute_sub)
+- [__mute_chans](./private_methods.md#notifier__mute_chans-channels-b-)
+- [__mute_sub](./private_methods.md#notifier__mute_sub-id-channels-b-)
 <br>
 <br>
 <br>
