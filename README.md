@@ -110,10 +110,10 @@ The functions below are not required outside the internals of pgnotifier. They
 are publicly exposed and included here as a matter of interest.
 
 **[Internal helper functions](#Internal-helper-functions)**
-- [assoc_in](#assoc_in-m-pv-v-)
-- [dissoc_in](#dissoc_in-m-pv-)
-- [filterkv](#filterkv-m-f-a-)
-- [as_sync](#as_async-f-a-)
+- [assoc_in](#notifyassoc_in-m-pv-v-)
+- [dissoc_in](#notifydissoc_in-m-pv-)
+- [filterkv](#notifyfilterkv-m-f-a-)
+- [as_sync](#notifyas_async-f-a-)
 
 <br>
 
@@ -125,10 +125,10 @@ via the method links below.
 **[Private methods](./private_methods.md)**
 - [__maybe_stop](./private_methods.md#notifier__maybe_stop-)
 - [__maybe_restart](./private_methods.md#notifier__maybe_restart-)
-- [__notify](./private_methods.md#__notify)
-- [__valid_chans](./private_methods.md#__valid_chans)
-- [__mute_chans](./private_methods.md#__mute_chans)
-- [__mute_sub](./private_methods.md#__mute_sub)
+- [__notify](./private_methods.md#notifier__notify)
+- [__valid_chans](./private_methods.md#notifier__valid_chans)
+- [__mute_chans](./private_methods.md#notifier__mute_chans)
+- [__mute_sub](./private_methods.md#notifier__mute_sub)
 <br>
 <br>
 <br>
