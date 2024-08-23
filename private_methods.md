@@ -96,19 +96,8 @@ Args:
 
 <hr style="height:1px">
 
-#### <mark><strong><a style="font-weight:400">Notifier</a>.__chans_by_mute_state( <em style="font-weight:400">b, channels</em> )</strong></mark>
-Returns vector of channels with mute state `b`, as `pyr.pvector`.
-
-Args:
-* `b` mute state to filter by, as `bool`
-* `channels` list of channels on which to report muted status on, as `str`
-(single channel), `list`, `pyrsistent.PVector` or `set`. If no channels given,
-*ALL* channels with mute state matching `b` will be reported.
-
-<hr style="height:1px">
-
 #### <mark><strong><a style="font-weight:400">Notifier</a>.__mute_sub( <em style="font-weight:400">id, channels, b</em> )</strong></mark>
-Sets the mute state `b` of subscriber with `id` on channels.
+Sets the mute state `b` of subscriber with id on channels.
 
 Args:
 * `id` subscriber id, as `hashable` (i.e. any immutable type such as strings,
@@ -116,17 +105,5 @@ numbers, and tuples containing immutable types).
 * `channels` list of channels to the subscriber mute state on, as `str`
 (single channel), `list` or `set`. If no channels given, subscriber with `id`
 will have it's mute state set to `b` on *ALL* channels it is subscribed to.
-
-<hr style="height:1px">
-
-#### <mark><strong><a style="font-weight:400">Notifier</a>.__subs_by_mute_state( b, channels )</strong></mark>
-Returns map of channels with subscribers with mute state `b`, as `pyrsistent.PMap`.
-
-Args:
-* `b` mute state to filter by, as `bool`
-* `channels` list of channels on which to report subscriber muted status `b` on,
-as `str` (single channel), `list`, `pyrsistent.PVector` or `set`. If no channels
-given, subscriber with `id` will be reported on *ALL* channels where it's mute
-state matches `b`.
 
 <hr style="height:1px">

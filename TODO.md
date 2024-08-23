@@ -10,9 +10,9 @@ A list of stuff to look into at a later date.
   * Custom exceptions to give salient information.
   * User settings to configure if/how exceptions are handled (global,
   as function params, whatever makes sense)
-
 * SYSCHAN needs further consideration. I expect a future release to
 properly integrate the SYSCHAN with the functionality of a regular
 channel with the exception that it is always on the listener thread.
 Perhaps system commands can be executed via messages from the channel?
 Postgresql system messages? Other non-application level stuff?
+* Tests
