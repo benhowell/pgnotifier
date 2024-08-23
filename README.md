@@ -100,7 +100,7 @@ The methods below provide everything needed to work with pgnotifier.
 - [unmute_subscriber](#notifierunmute_subscriber-id-channelspyrsistentpvector-)
 - [start](#notifierstart-)
 - [stop](#notifierstop-)
-- [restart](##notifierrestart-)
+- [restart](#notifierrestart-)
 - [is_running](#notifieris_running-)
 
 <br>
