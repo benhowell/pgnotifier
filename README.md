@@ -1,5 +1,5 @@
 # pgnotifier
-A simple little library to capture, process, and dispatch Postgresql NOTIFY streams
+A simple little module to capture, process, and dispatch Postgresql NOTIFY streams
 <br>
 ### Features
 * Monitor multiple channels
@@ -129,16 +129,14 @@ via the method links below.
 - [__valid_chans](./private_methods.md#notifier__valid_chans)
 - [__mute_chans](./private_methods.md#notifier__mute_chans-channels-b-)
 - [__mute_sub](./private_methods.md#notifier__mute_sub-id-channels-b-)
-<br>
-<br>
-<br>
 
+<br>
 
 ## TODO
 A list of stuff to look into at a later date can be found over here:
 [TODO](./TODO.md)
 
-
+<br>
 
 ## API
 The methods below provide everything needed to work with pgnotifier.
@@ -245,9 +243,11 @@ Otherwise, if `autorun=False`, activated channels containing this subscriber
 *will not* be monitored until a call to `stop()` and `start()`, or `restart()`,
 is made.
 >
-> It's advisable to allow pgnotifier take care of listener thread management
-via the default `autorun=True`, *unless there is a very good reason* to
-manage it manually.
+> Listener thread (re)starts are only required under certain, specific
+circumstances. It's advisable to allow pgnotifier take care of listener
+thread management via the default `autorun=True`, *unless there is a
+very good reason* to manage it manually.
+See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
 
 When a notification is received on a channel, callbacks subscribed to that channel
 will be executed.

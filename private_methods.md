@@ -1,5 +1,5 @@
 # pgnotifier
-A simple little library to capture, process, and dispatch Postgresql NOTIFY streams
+A simple little module to capture, process, and dispatch Postgresql NOTIFY streams
 <br>
 ## Private methods
 The methods below are private and not intended for use. Documentation
@@ -26,9 +26,12 @@ Listener thread restart process:
   * Database cursor and connection are closed.
 * New database connection is created.
 * Postgresql LISTEN commands are executed (one per active channel)
-* NOTIFY message callback function, and `psycopg.connection.notifies()` call
-are passed to the asyncio loop, which in-turn is executed as a task
-inside a thread returning a blocking generator as a Future.
+* NOTIFY message callback function, and `psycopg.connection.notifies()`
+call (which returns a blocking generator) are passed to the asyncio loop,
+which in-turn is executed as a task inside a thread returning a Future.
+Whenever the future returns NOTIFY data received from Postgresql, the
+NOTIFY message callback distributes that data to all callbacks
+subscribed to the channel the data arrived on.
 
 Whenever the future returns NOTIFY data received from Postgresql, the
 NOTIFY message callback distributes that data to all callbacks

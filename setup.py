@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='pgnotifier',
-    version='0.0.9',
+    version='0.0.10',
     install_requires=[
 	'pyrsistent>=0.20.0',
 	'psycopg>=3.2.1',

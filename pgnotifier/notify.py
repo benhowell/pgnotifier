@@ -23,17 +23,21 @@ def filterkv(m,f,*a):
 class Notifier:
     """
     # pgnotifier
-    A simple little utility to capture and process Postgresql NOTIFY streams
+    A simple little module to capture and process Postgresql NOTIFY streams
 
     #### Features
-    * Monitor multiple channels at once
-    * Register callbacks to any number of channels
-    * Register any number of callbacks to a channel
-    * Add/remove and mute/unmute channels at will
-    * Add/remove and mute/unmute subscribers at will
-    * Abstracts away asynchronous context for synchronous use
-    * Automatic str->type conversion of all valid python types via `ast.literal_eval`
+    * Monitor multiple channels
+    * Register one or more callbacks with multiple channels
+    * Register one or more channels with a callback
+    * Control callbacks on a per channel basis
+    * Add and remove channels at any time
+    * Mute and un-mute channels
+    * Add and remove subscribers at any time
+    * Mute and un-mute subscribers
+    * Abstract away asynchronous context for synchronous use
+    * Automatic str -> type conversion of all valid python types via `ast.literal_eval`
     * Persistent, immutable internal data structures
+    * Minimalist API
     * Tight footprint
     """
     def __init__(self, dbconf):
@@ -85,14 +89,16 @@ class Notifier:
         listener thread restart. Thread restarts happen automatically when `autorun=True`.
         Otherwise, if `autorun=False`, removed channels *will* continue to be
         monitored until a call to `stop()` and `start()`, or `restart()`, is made.
-
+        >
         > Inactive channels (e.g. channel is muted and/or has no subscribers and/or
         has all muted subscribers), when removed, *do not* require a restart as
         they will have already been removed from the listener thread.
-
-        > It's advisable to allow pgnotifier take care of listener thread management
-        via the default `autorun=True`, *unless there is a very good reason* to
-        manage it manually.
+        >
+        > Listener thread (re)starts are only required under certain, specific
+        circumstances. It's advisable to allow pgnotifier take care of listener
+        thread management via the default `autorun=True`, *unless there is a
+        very good reason* to manage it manually.
+        See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
         """
         if isinstance(channels, str):
             channels = pyr.v(channels)
@@ -136,10 +142,12 @@ class Notifier:
         Otherwise, if `autorun=False`, activated channels containing this subscriber
         *will not* be monitored until a call to `stop()` and `start()`, or `restart()`,
         is made.
-
-        > It's advisable to allow pgnotifier take care of listener thread management
-        via the default `autorun=True`, *unless there is a very good reason* to
-        manage it manually.
+        >
+        > Listener thread (re)starts are only required under certain, specific
+        circumstances. It's advisable to allow pgnotifier take care of listener
+        thread management via the default `autorun=True`, *unless there is a
+        very good reason* to manage it manually.
+        See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
 
         When a notification is received on a channel, callbacks subscribed to that channel
         will be executed.
@@ -320,8 +328,8 @@ class Notifier:
         * New database connection is created.
         * Postgresql LISTEN commands are executed (one per active channel)
         * NOTIFY message callback function, and `psycopg.connection.notifies()`
-        call (blocking) are passed to the asyncio loop, which in-turn is executed
-        as a task inside a thread returning a Future.
+        call (which returns a blocking generator) are passed to the asyncio loop,
+        which in-turn is executed as a task inside a thread returning a Future.
         Whenever the future returns NOTIFY data received from Postgresql, the
         NOTIFY message callback distributes that data to all callbacks
         subscribed to the channel the data arrived on.
