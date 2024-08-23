@@ -193,9 +193,11 @@ monitored until a call to `stop()` and `start()`, or `restart()`, is made.
 has all muted subscribers), when removed, *do not* require a restart as
 they will have already been removed from the listener thread.
 >
-> It's advisable to allow pgnotifier take care of listener thread management
-via the default `autorun=True`, *unless there is a very good reason* to
-manage it manually.
+> Listener thread (re)starts are only required under certain, specific
+circumstances. It's advisable to allow pgnotifier take care of listener
+thread management via the default `autorun=True`, *unless there is a
+very good reason* to manage it manually.
+See [__maybe_restart](./private_methods.md#notifier__maybe_restart-) for more detail.
 
 ``` python
 from pgnotifier import Notifier
