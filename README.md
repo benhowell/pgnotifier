@@ -91,7 +91,7 @@ The methods below provide everything needed to work with pgnotifier.
 - [add_channels](#notifieradd_channels-channels-)
 - [remove_channels](#notifierremove_channels-channels-autoruntrue-)
 - [channels](#notifierchannels-)
-- [subscribe](notifiersubscribe-id-channel-fn-autoruntrue-)
+- [subscribe](#notifiersubscribe-id-channel-fn-autoruntrue-)
 - [unsubscribe](#notifierunsubscribe-id-channel-autoruntrue-)
 - [subscribers](#notifiersubscribers-)
 - [mute_channels](#notifiermute_channels-channelspyrsistentpvector-)
