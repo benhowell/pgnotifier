@@ -385,7 +385,7 @@ class Notifier:
                 ks = filterkv(
                     self.__c2s.get(n.channel), lambda _,v:not v['mute'])
                 for k in ks:
-                    self.__subs[k](k, n.channel, ast_payload, n.pid)
+                    self.__subs[k]['fn'](k, n.channel, ast_payload, n.pid)
 
     def __valid_chans(self):
         """
@@ -395,10 +395,10 @@ class Notifier:
         * It is not muted.
         * It contains at least one non-muted subscriber.
         """
-        return filterkv(self.__channels,
+        return pyr.pvector(filterkv(self.__channels,
                 lambda k,v: not v['mute'] and
                 len(filterkv(self.__c2s.get(k, {}),
-                            lambda _,v: not v['mute'])) > 0).keys()
+                            lambda _,v: not v['mute'])) > 0).keys())
 
     def __mute_chans(self, channels, b):
         """
