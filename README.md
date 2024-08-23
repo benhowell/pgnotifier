@@ -190,11 +190,11 @@ Args:
 listener thread restart. Thread restarts happen automatically when `autorun=True`.
 Otherwise, if `autorun=False`, removed channels *will* continue to be
 monitored until a call to `stop()` and `start()`, or `restart()`, is made.
-
+>
 > Inactive channels (e.g. channel is muted and/or has no subscribers and/or
 has all muted subscribers), when removed, *do not* require a restart as
 they will have already been removed from the listener thread.
-
+>
 > It's advisable to allow pgnotifier take care of listener thread management
 via the default `autorun=True`, *unless there is a very good reason* to
 manage it manually.
@@ -244,7 +244,7 @@ listener thread restart. Thread restarts happen automatically when `autorun=True
 Otherwise, if `autorun=False`, activated channels containing this subscriber
 *will not* be monitored until a call to `stop()` and `start()`, or `restart()`,
 is made.
-
+>
 > It's advisable to allow pgnotifier take care of listener thread management
 via the default `autorun=True`, *unless there is a very good reason* to
 manage it manually.
